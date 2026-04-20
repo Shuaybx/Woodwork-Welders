@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Design Viewer — Woodwork Welders</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="Woodwork.css">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+  <link rel="icon" href="download.ico">
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three":         "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+
+</head>
+<body>
+
+<div id="nav-container"></div>
+
+<div class="dv-page">
+
+  <a href="Make Your Own Wears.html" class="dv-back">
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+    Back to Customiser
+  </a>
+
+  <div id="dv-not-found" class="not-found" style="display:none">
+    <div class="nf-icon">🪵</div>
+    <h2>Design Not Found</h2>
+    <p>This design may have been cleared or the link is invalid.</p>
+    <a href="Make Your Own Wears.html"
+       class="inline-block bg-amber-800 hover:bg-amber-900 text-white text-sm font-bold px-7 py-3 rounded-xl transition-colors">
+      Start New Design
+    </a>
+  </div>
+
+  <div id="dv-main" style="display:none">
+    <h1 class="dv-heading" id="dv-heading">Custom Design</h1>
+    <p class="dv-meta" id="dv-meta"></p>
+
+    <div class="dv-viewer-container">
+      <div class="dv-canvas-wrap" id="dv-wrap">
+        <canvas id="dv-canvas"></canvas>
+
+        <div class="dv-orbit-hint" id="dv-orbit-hint">Drag to rotate · Scroll to zoom · Right-drag to pan</div>
+
+        <div id="dv-loading">
+          <div class="dv-spinner"></div>
+          <div class="dv-loading-msg">Loading design…</div>
+        </div>
+
+        <div class="dv-cam-presets">
+          <button class="dv-cam-pill dv-active" id="cp-perspective" onclick="dvSetCamPreset('perspective')">
+            3/4 View
+          </button>
+          <button class="dv-cam-pill" id="cp-front" onclick="dvSetCamPreset('front')">Front</button>
+          <button class="dv-cam-pill" id="cp-side" onclick="dvSetCamPreset('side')">Side</button>
+          <button class="dv-cam-pill" id="cp-top" onclick="dvSetCamPreset('top')">Top</button>
+        </div>
+
+        <div class="dv-controls">
+          <button class="dv-icon-btn px-4" title="Download Screenshot" onclick="dvDownload()">
+            <span class="text-[11px] font-bold">Download Preview Image</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="footer-container"></div>
+
+<script>
+  try {
+    if (typeof NavController !== 'undefined') new NavController().init('Make Your Own Wears', 'gallery');
+    if (typeof FooterView !== 'undefined') document.getElementById('footer-container').innerHTML = FooterView.render('gallery');
+  } catch (e) { console.warn("Nav/Footer failed to load."); }
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const TYPE_MAP = { 'Dining Table': 'table', 'Accent Chair': 'chair', 'Lounge Sofa': 'sofa', 'Executive Desk': 'desk', 'Display Shelving': 'shelf' };
+const MAT_MAP = { 'Solid Oak': 'oak', 'Black Walnut': 'walnut', 'Maple': 'maple', 'Reclaimed Pine': 'pine', 'Wrought Iron': 'iron', 'Brass': 'brass' };
+
+const MATERIAL_DEFS = {
+  oak: { hexColor: '#d4a55a', roughness: 0.78, metalness: 0.0 },
+  walnut: { hexColor: '#3a1c08', roughness: 0.60, metalness: 0.0 },
+  maple: { hexColor: '#f1e6d2', roughness: 0.82, metalness: 0.0 },
+  pine: { hexColor: '#c8a060', roughness: 0.92, metalness: 0.0 },
+  iron: { hexColor: '#2e2e2e', roughness: 0.88, metalness: 0.95 },
+  brass: { hexColor: '#c5a059', roughness: 0.25, metalness: 0.98 }
+};
+
+let scene, camera, renderer, controls, design, furniture;
+let allMeshes=[];
+
+function buildFurniture(p){
+  const typeKey = TYPE_MAP[p.item] || 'table';
+  const matKey = MAT_MAP[p.material] || 'oak';
+  const def = MATERIAL_DEFS[matKey] || MATERIAL_DEFS['oak'];
+
+  const mat = new THREE.MeshStandardMaterial({
+    color: def.hexColor,
+    roughness: def.roughness,
+    metalness: def.metalness
+  });
+
+  if (p.finish === 'Matte Black') { mat.color.setHex(0x161616); mat.roughness = 0.95; }
+  else if (p.finish === 'Whitewash') { mat.color.lerp(new THREE.Color(0xffffff), 0.5); }
+
+  const G = new THREE.Group();
+  const addPart = (w, h, d, x, y, z) => {
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+    mesh.position.set(x, y, z);
+    mesh.castShadow = true; mesh.receiveShadow = true;
+    G.add(mesh);
+    allMeshes.push(mesh);
+  };
+
+  if (typeKey === 'table') {
+    addPart(2.2, 0.1, 1.2, 0, 1.0, 0); addPart(0.1, 1.0, 0.1, 1, 0.5, 0.5); addPart(0.1, 1.0, 0.1, -1, 0.5, 0.5); addPart(0.1, 1.0, 0.1, 1, 0.5, -0.5); addPart(0.1, 1.0, 0.1, -1, 0.5, -0.5);
+  } else if (typeKey === 'chair') {
+    addPart(0.6, 0.08, 0.6, 0, 0.5, 0); addPart(0.08, 0.5, 0.08, 0.25, 0.25, 0.25); addPart(0.08, 0.5, 0.08, -0.25, 0.25, 0.25); addPart(0.6, 0.6, 0.08, 0, 0.84, -0.25);
+  } else if (typeKey === 'sofa') {
+    addPart(2.4, 0.4, 1.0, 0, 0.2, 0); addPart(2.4, 0.6, 0.3, 0, 0.7, -0.35); addPart(0.3, 0.5, 1.0, 1.05, 0.65, 0); addPart(0.3, 0.5, 1.0, -1.05, 0.65, 0);
+  } else if (typeKey === 'desk') {
+    addPart(2.0, 0.1, 1.0, 0, 1.0, 0); addPart(0.4, 0.95, 0.9, 0.7, 0.475, 0); addPart(0.4, 0.95, 0.9, -0.7, 0.475, 0);
+  } else if (typeKey === 'shelf') {
+    addPart(0.05, 2.0, 0.6, 0.9, 1.0, 0); addPart(0.05, 2.0, 0.6, -0.9, 1.0, 0); addPart(1.8, 0.05, 0.55, 0, 0.2, 0); addPart(1.8, 0.05, 0.55, 0, 0.7, 0); addPart(1.8, 0.05, 0.55, 0, 1.2, 0);
+  }
+
+  G.scale.set((p.width||120)/120, (p.height||75)/75, (p.depth||80)/80);
+  return G;
+}
+
+function initScene(d){
+  const wrap=document.getElementById('dv-wrap'), canvas=document.getElementById('dv-canvas');
+  renderer=new THREE.WebGLRenderer({canvas, antialias:true, preserveDrawingBuffer:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.shadowMap.enabled=true;
+  renderer.outputColorSpace=THREE.SRGBColorSpace;
+  
+  const sz=()=>{
+    const w=wrap.clientWidth, h=Math.max(600, wrap.clientHeight);
+    renderer.setSize(w,h,false);
+    if(camera){camera.aspect=w/h; camera.updateProjectionMatrix();}
+  };
+  sz(); new ResizeObserver(sz).observe(wrap);
+
+  scene=new THREE.Scene();
+  scene.background = new THREE.Color(0xf5f5f5);
+  scene.add(new THREE.HemisphereLight(0xffffff, 0xc4c4c4, 0.6));
+  const keyLight = new THREE.DirectionalLight(0xffffff, 1.0);
+  keyLight.position.set(5, 8, 3);
+  keyLight.castShadow = true;
+  scene.add(keyLight);
+  
+  const floor=new THREE.Mesh(new THREE.PlaneGeometry(80,80), new THREE.ShadowMaterial({opacity:0.1}));
+  floor.rotation.x=-Math.PI/2; floor.receiveShadow=true; scene.add(floor);
+  scene.add(new THREE.GridHelper(40,40,0xcccccc,0xdddddd));
+
+  camera=new THREE.PerspectiveCamera(38, canvas.clientWidth/canvas.clientHeight, 0.1, 100);
+  camera.position.set(6, 5, 8);
+  controls=new OrbitControls(camera, canvas);
+  controls.enableDamping=true;
+  controls.target.set(0, 0.5, 0);
+
+  furniture=buildFurniture(d.params);
+  scene.add(furniture);
+
+  document.getElementById('dv-loading').classList.add('out');
+  (function loop(){ requestAnimationFrame(loop); controls.update(); renderer.render(scene, camera); })();
+}
+
+window.dvSetCamPreset=function(preset){
+  const PRESETS={ perspective:{x:6,y:5,z:8}, front:{x:0,y:2,z:10}, side:{x:10,y:2,z:0}, top:{x:0,y:12,z:0.1} };
+  const cfg=PRESETS[preset];
+  document.querySelectorAll('.dv-cam-pill').forEach(p=>p.classList.toggle('dv-active', p.id===`cp-${preset}`));
+  camera.position.set(cfg.x, cfg.y, cfg.z);
+  controls.update();
+};
+
+window.dvDownload=function(){
+  renderer.render(scene, camera);
+  const a=document.createElement('a'); a.href=renderer.domElement.toDataURL('image/png');
+  a.download=`design-preview.png`; a.click();
+};
+
+function boot(){
+  const id=new URLSearchParams(location.search).get('id');
+  const allSaved=JSON.parse(localStorage.getItem('wwDesigns')||'[]');
+  const found = allSaved.find(d=>d.id===id) || allSaved[allSaved.length-1];
+  
+  if(!found){document.getElementById('dv-not-found').style.display='block'; return;}
+  
+  document.getElementById('dv-main').style.display='block';
+  document.getElementById('dv-heading').textContent=`Custom ${found.params.material} ${found.params.item}`;
+  document.getElementById('dv-meta').textContent=`${found.params.width}×${found.params.height}×${found.params.depth}cm · ${found.params.finish}`;
+  initScene(found); 
+}
+
+document.addEventListener("DOMContentLoaded", boot);
+</script>
+</body>
+</html>

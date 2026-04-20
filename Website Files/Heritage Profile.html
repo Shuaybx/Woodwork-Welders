@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Heritage Profile — Woodwork Welders</title>
+  <link rel="stylesheet" href="Woodwork.css">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+  <link rel="icon" href="download.ico">
+  <style>
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <nav class="nav-wrap">
+    <a href="Welcome Area.html" class="logo-link"><img src="Logo Image.jpeg" width="15%" height="15%" alt="Logo"></a>
+    <ul class="nav-links">
+      <li><a href="Welcome Area.html">Home</a></li>
+      <li><a href="Traditional Product Promotion.html">Promotions</a></li>
+      <li><a href="Woodwork_Cart.html">Cart</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main class="heritage-layout">
+  <div class="heritage-image-wrapper">
+    <img id="h-image" src="" alt="Heritage Image" class="heritage-img">
+  </div>
+
+  <div class="heritage-info">
+    <span class="sub-heading">The Heritage Profile</span>
+    <h1 id="h-product-name" class="heritage-title">Loading...</h1>
+    
+    <div class="story-section">
+      <h3>Material Origins</h3>
+      <p id="h-origins">Loading material origins...</p>
+    </div>
+    
+    <div class="story-section">
+      <h3>The Craftsman's Note</h3>
+      <p id="h-notes">Loading craftsman notes...</p>
+    </div>
+
+    <a id="back-link" href="#" class="back-btn">Return to Product</a>
+  </div>
+</main>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+  // Your exact same data dictionary ensures functionality remains unbroken
+  const heritageData = {
+    "mahogany-desk": {
+      name: "Executive Mahogany Writing Desk",
+      img: "https://images.unsplash.com/photo-1502005097973-f54252373e27?auto=format&fit=crop&w=1200&q=80",
+      origins: "Sourced from sustainable plantations in West Africa, this Mahogany was carefully kiln-dried for over 6 months to ensure absolute stability. The leather inlay is sourced from a multi-generational tannery in Italy.",
+      notes: "Creating the dovetail joints for this desk requires over 12 hours of meticulous hand-sawing and chiseling. It is a tribute to the writing desks of the 19th century, designed to last multiple lifetimes."
+    },
+    "walnut-credenza": {
+      name: "Mid-Century Walnut Sideboard",
+      img: "https://images.unsplash.com/photo-1595428774223-ef52624120d2?auto=format&fit=crop&w=1200&q=80",
+      origins: "Crafted from select American Black Walnut harvested in the Appalachian Mountains. We specifically chose logs with tight grain patterns to ensure the continuous flow across the sliding doors.",
+      notes: "The challenge with a continuous grain match is perfection. One slip of the saw ruins the illusion. We hand-rub the final piece with Danish oil to bring out the deep, chocolate tones of the walnut."
+    },
+    "teak-lounge-chair": {
+      name: "Danish Teak Lounge Chair",
+      img: "https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?auto=format&fit=crop&w=1200&q=80",
+      origins: "Built from Grade-A, old-growth Teak salvaged from decommissioned maritime vessels. The cane weaving is sourced directly from rattan palms in Southeast Asia.",
+      notes: "We wanted to honor the mid-century Scandinavian masters. The frame is shaped entirely by hand using spokeshaves, ensuring organic, flowing transitions between the arms and legs."
+    },
+    "maple-console": {
+      name: "Live Edge Maple Console",
+      img: "https://images.unsplash.com/photo-1533090481720-856c6e3c1fdc?auto=format&fit=crop&w=1200&q=80",
+      origins: "The single slab of light Maple was ethically salvaged from a naturally fallen tree in the Pacific Northwest. The base is crafted from raw, locally forged industrial steel.",
+      notes: "Leaving a 'live edge' means we let the tree dictate the final design. We spend days carefully removing the bark by hand to preserve the natural contour of the wood without damaging the cambium layer beneath."
+    },
+    "coffee-table": {
+      name: "Live Edge Oak Coffee Table",
+      img: "https://images.unsplash.com/photo-1554295405-abb8fd54f153?auto=format&fit=crop&w=1200&q=80",
+      origins: "This English Oak was reclaimed from a fallen tree following a historic storm. The steel legs are fabricated in our own metal shop, bead-blasted and powder-coated for resilience.",
+      notes: "Oak is incredibly dense and unforgiving to work with, but the payoff is immense. We filled the natural checks and knots with a subtle black epoxy to stabilize the slab while highlighting its imperfections."
+    },
+    "bookshelf": {
+      name: "Industrial Pipe Bookshelf",
+      img: "https://images.unsplash.com/photo-1594620302200-9a762244a156?auto=format&fit=crop&w=1200&q=80",
+      origins: "The timber planks are reclaimed from 100-year-old barn joists, carrying the original saw marks. The framework is made of heavy-duty, blackened iron piping.",
+      notes: "This piece marries our welding and woodworking disciplines. The pipes are hand-threaded and torqued to ensure absolute structural rigidity, capable of holding the heaviest of libraries."
+    },
+    "dining-table": {
+      name: "Walnut Farmhouse Table",
+      img: "https://images.unsplash.com/photo-1577140917170-285929fb55b7?auto=format&fit=crop&w=1200&q=80",
+      origins: "Milled from robust American Walnut, chosen for its durability and rich, warming color palette. Finished with an all-natural, food-safe hardwax oil.",
+      notes: "Farmhouse tables are built for generations of family gatherings. We used traditional mortise and tenon joinery, pinned with contrasting oak dowels, so the table can expand and contract naturally with the seasons."
+    },
+    "armchair": {
+      name: "The Craftsman Armchair",
+      img: "https://images.unsplash.com/photo-1592078615290-033ee584e267?auto=format&fit=crop&w=1200&q=80",
+      origins: "Carved from premium Cherry wood sourced from the Eastern United States, a wood known to deepen and redden beautifully as it ages and is exposed to sunlight.",
+      notes: "Comfort dictates the form here. The seat is deeply sculpted, or 'saddled,' using traditional hand tools to perfectly map human ergonomics in solid wood."
+    },
+    "default": {
+      name: "Woodwork Welders Original",
+      img: "https://images.unsplash.com/photo-1610701596007-11502861dcfa?auto=format&fit=crop&w=1200&q=80",
+      origins: "Our materials are ethically sourced and hand-selected for durability and beauty, ensuring every piece tells a story.",
+      notes: "Every cut, weld, and sanding pass is done with absolute precision by our master craftsmen right here in our workshop."
+    }
+  };
+
+  const query = new URLSearchParams(window.location.search);
+  const productId = query.get('id');
+
+  const item = heritageData[productId] ? heritageData[productId] : heritageData["default"];
+  
+  if (productId) {
+    if (!heritageData[productId]) {
+      document.getElementById('h-product-name').innerText = productId.replace(/-/g, ' ');
+    } else {
+      document.getElementById('h-product-name').innerText = item.name;
+    }
+    
+    document.getElementById('h-image').src = item.img;
+    // Fade in effect for smoother loading
+    document.getElementById('h-image').onload = function() {
+        this.style.display = "block";
+    };
+    
+    document.getElementById('h-origins').innerText = item.origins;
+    document.getElementById('h-notes').innerText = item.notes;
+
+    // Set the back link to go back to the exact product Detail page
+    document.getElementById('back-link').href = `Product Detail.html?id=${productId}`;
+  } else {
+    document.getElementById('h-product-name').innerText = "Product Not Found";
+  }
+});
+</script>
+
+</body>
+</html>
