@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Panel — Woodwork Welders</title>
+  <link rel="stylesheet" href="Woodwork.css">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+  <link rel="icon" href="download.ico">
+</head>
+<body>
+
+<div class="topbar">
+  <span>🔐 Logged in as <strong>Admin</strong> &nbsp;·&nbsp; Woodwork Welders Management (Database Connected)</span>
+  <span>admin / inventory / CRUD-manager</span>
+</div>
+
+<header>
+  <nav>
+    <a href="Welcome Area.html" class="logo">
+     <img src="Logo Image.jpeg" width="15%" height="15%" alt="Logo">
+    </a>
+    <ul class="nav-links">
+      <li><a href="Make Your Own Wears.html">Bespoke</a></li>
+      <li><a href="Traditional Product Promotion.html">Promotions</a></li>
+      <li><a href="Heritage Profile.html">Heritage Profile</a></li>
+    </ul>
+    <div class="nav-right">
+      <a href="Product Return.html" class="btn-outline-nav">↩ Returns Page</a>
+      <a href="Contact Us.html" class="btn-cta">Contact Us</a>
+    </div>
+  </nav>
+</header>
+
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="scard">
+      <div class="scard-head">Database Modules</div>
+      <div class="snav active" onclick="setNav(this,'')">📦&nbsp; Inventory Tracking</div>
+      <div class="snav" onclick="setNav(this,'active')">✅&nbsp; Active Listings</div>
+      <div class="snav" onclick="setNav(this,'removed')">🗑️&nbsp; Soft Deleted</div>
+      <div class="snav" onclick="setNav(this,'returned')">↩&nbsp; Returned Items</div>
+    </div>
+
+    <div class="scard">
+      <div class="scard-head">Live System Stats</div>
+      <div class="srow"><span class="srow-lbl">Total Records</span><span class="srow-val" id="s-tot">0</span></div>
+      <div class="srow"><span class="srow-lbl">Active</span><span class="srow-val v-green" id="s-act">0</span></div>
+      <div class="srow"><span class="srow-lbl">Removed</span><span class="srow-val v-red" id="s-rem">0</span></div>
+      <div class="srow"><span class="srow-lbl">Returned</span><span class="srow-val v-blue" id="s-ret">0</span></div>
+    </div>
+
+    <div class="scard">
+      <div class="scard-head">Database Actions</div>
+      <div class="sqact">
+        <button class="btn btn-ghost btn-block" onclick="exportCSV()">⬇&nbsp; Export to CSV</button>
+        <button class="btn btn-red btn-block" onclick="factoryResetDB()">⚠️ Reset Database</button>
+      </div>
+    </div>
+  </aside>
+
+  <main>
+    <div class="main-head">
+      <h1>Admin Panel -Inventory Management </h1>
+      <p>System module for Read, Update, and Delete operations on the furniture database.</p>
+    </div>
+
+    <div class="notice" id="db-status">
+      🟢 <strong>System Status:</strong> Simulated PHP/MySQL connection active. Modifications are saved asynchronously to the local database.
+    </div>
+
+    <div class="toolbar">
+      <div class="search-box">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width: 18px; position: absolute; left: 10px; top: 10px;">
+          <circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22" stroke-linecap="round"/>
+        </svg>
+        <input type="text" id="q" placeholder="Query database by name, SKU..." oninput="renderUI()" style="padding-left: 35px; width: 100%;">
+      </div>
+      <select class="fselect" id="fst" onchange="renderUI()">
+        <option value="">All Database Records</option>
+        <option value="active">Active</option>
+        <option value="removed">Removed</option>
+        <option value="returned">Returned</option>
+      </select>
+    </div>
+
+    <div class="bulk-bar hidden" id="bulk-bar">
+      <span class="bulk-ct" id="bulk-ct">0 selected</span>
+      <button class="btn btn-blue" onclick="openRetModal()">↩ Mark Returned</button>
+      <button class="btn btn-red" onclick="openDelModal()">🗑 Soft Delete</button>
+      <button class="btn btn-ghost" onclick="clearSel()">✕ Clear</button>
+    </div>
+
+    <div class="table-wrap">
+      <table style="width: 100%; text-align: left;">
+        <thead>
+          <tr>
+            <th><input type="checkbox" id="chk-all" onchange="toggleAll(this)"></th>
+            <th>Product Details</th>
+            <th>Category</th>
+            <th>Price</th>
+            <th>Stock/Qty</th>
+            <th>DB Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tbody">
+          <tr><td colspan="7" style="text-align:center;">Fetching records from database...</td></tr>
+        </tbody>
+      </table>
+      <div class="tfoot" style="display: flex; justify-content: space-between; margin-top: 10px;">
+        <span>Showing <strong id="shown">0</strong> of <strong id="total">0</strong> records</span>
+        <span id="clock"></span>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="modal-bg" id="del-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:999;">
+  <div class="modal" style="background:#fff; margin: 10% auto; padding: 20px; width: 400px; border-radius: 8px;">
+    <h2 style="color:var(--red, #ef4444)">Soft Delete Records</h2>
+    <p>These items will be marked as removed in the database.</p>
+    <ul class="modal-list" id="del-list" style="margin: 15px 0; padding-left: 20px;"></ul>
+    <div class="modal-acts" style="display: flex; gap: 10px; justify-content: flex-end;">
+      <button class="btn btn-ghost" onclick="closeModals()">Cancel</button>
+      <button class="btn btn-red" onclick="confirmDel()">🗑 Confirm Update</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="ret-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:999;">
+  <div class="modal m-ret" style="background:#fff; margin: 10% auto; padding: 20px; width: 400px; border-radius: 8px;">
+    <h2 style="color:var(--blue, #3b82f6)">Update to Returned</h2>
+    <p>These items will be updated to 'returned' status in the database.</p>
+    <ul class="modal-list" id="ret-list" style="margin: 15px 0; padding-left: 20px;"></ul>
+    <div class="modal-acts" style="display: flex; gap: 10px; justify-content: flex-end;">
+      <button class="btn btn-ghost" onclick="closeModals()">Cancel</button>
+      <button class="btn btn-blue" onclick="confirmRet()">↩ Confirm Update</button>
+    </div>
+  </div>
+</div>
+
+<div class="toasts" id="toasts" style="position:fixed; bottom:20px; right:20px; z-index:1000;"></div>
+
+<script>
+const MockDatabaseAPI = {
+  // Simulates a PHP database connection and SELECT query
+  fetchInventory: async () => {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        let db = JSON.parse(localStorage.getItem('php_mysql_mock_db'));
+        if (!db) {
+          // Seed initial database if empty
+          db = [
+            { id: 101, sku: 'WW-001', name: "Rustic Oak Dining Table", cat: 'Furniture', price: 450.00, stock: 12, status: 'active' },
+            { id: 102, sku: 'WW-002', name: "Industrial Pine Shelving", cat: 'Furniture', price: 185.50, stock: 5, status: 'active' },
+            { id: 103, sku: 'WW-003', name: "Mahogany Bed Frame", cat: 'Furniture', price: 899.99, stock: 2, status: 'returned' },
+            { id: 104, sku: 'WW-004', name: "Ash Wood Stool", cat: 'Furniture', price: 45.00, stock: 24, status: 'removed' }
+          ];
+          localStorage.setItem('php_mysql_mock_db', JSON.stringify(db));
+        }
+        resolve(db);
+      }, 400); // 400ms simulated network latency
+    });
+  },
+
+  // Simulates the PHP update query
+  updateStatus: async (ids, newStatus) => {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        let db = JSON.parse(localStorage.getItem('php_mysql_mock_db'));
+        db = db.map(row => ids.includes(row.id) ? { ...row, status: newStatus } : row);
+        localStorage.setItem('php_mysql_mock_db', JSON.stringify(db));
+        resolve({ success: true, affectedRows: ids.length });
+      }, 300);
+    });
+  },
+
+  // Simulates TRUNCATE query
+  resetDatabase: async () => {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        localStorage.removeItem('php_mysql_mock_db');
+        resolve({ success: true });
+      }, 300);
+    });
+  }
+};
+
+// Application State
+let products = [];
+let sel = new Set(), pending = [];
+const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
+
+//  READ Operation (CRUD)
+async function initializeData() {
+  products = await MockDatabaseAPI.fetchInventory();
+  renderUI();
+}
+
+// Filter & Render
+function filtered(){
+  const q = document.getElementById('q').value.toLowerCase();
+  const fs = document.getElementById('fst').value;
+  return products.filter(p=>
+    (!q  || p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q)) &&
+    (!fs || p.status===fs)
+  );
+}
+
+function renderUI(){
+  const list = filtered();
+  document.getElementById('shown').textContent = list.length;
+  document.getElementById('total').textContent = products.length;
+  updateStats();
+  
+  const tb = document.getElementById('tbody');
+  if(!list.length){
+    tb.innerHTML=`<tr><td colspan="7"><div style="padding: 20px; text-align: center;">📭 No records match your query.</div></td></tr>`;
+    return;
+  }
+  
+  tb.innerHTML = list.map(p=>{
+    const isSel = sel.has(p.id);
+    let color = p.status === 'active' ? '#047857' : (p.status === 'removed' ? '#b91c1c' : '#1d4ed8');
+    let bg = p.status === 'active' ? '#d1fae5' : (p.status === 'removed' ? '#fee2e2' : '#dbeafe');
+    
+    return `
+    <tr style="opacity: ${p.status === 'removed' ? '0.6' : '1'}; background: ${isSel ? '#f0f9ff' : 'transparent'}">
+      <td><input type="checkbox" ${isSel?'checked':''} onchange="togOne(${p.id},this)"></td>
+      <td>
+        <div style="font-weight: bold;">${p.name}</div>
+        <div style="font-size: 0.85em; color: #666;">${p.sku}</div>
+      </td>
+      <td>${p.cat}</td>
+      <td>£${p.price.toFixed(2)}</td>
+      <td><strong>${p.stock}</strong></td>
+      <td><span style="background:${bg}; color:${color}; padding: 3px 8px; border-radius: 12px; font-size: 0.8em; font-weight: bold;">${cap(p.status)}</span></td>
+      <td>
+        ${p.status!=='returned'?`<button onclick="qRet(${p.id})" style="cursor:pointer; border:none; background:none; color:blue;" title="Mark Returned">↩</button>`:''}
+        ${p.status!=='removed' ?`<button onclick="qDel(${p.id})" style="cursor:pointer; border:none; background:none; color:red; margin: 0 5px;" title="Soft Delete">🗑</button>`:''}
+        ${p.status!=='active'  ?`<button onclick="updateDbStatus([${p.id}], 'active')" style="cursor:pointer; border:none; background:none; color:green;" title="Restore">✓</button>`:''}
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function updateStats(){
+  document.getElementById('s-tot').textContent = products.length;
+  document.getElementById('s-act').textContent = products.filter(p=>p.status==='active').length;
+  document.getElementById('s-rem').textContent = products.filter(p=>p.status==='removed').length;
+  document.getElementById('s-ret').textContent = products.filter(p=>p.status==='returned').length;
+}
+
+// Checkbox & Bulk Logic
+function togOne(id,cb){ cb.checked?sel.add(id):sel.delete(id); bulkBar(); renderUI(); }
+function toggleAll(cb){ filtered().forEach(p=>cb.checked?sel.add(p.id):sel.delete(p.id)); bulkBar(); renderUI(); }
+function clearSel(){ sel.clear(); document.getElementById('chk-all').checked=false; bulkBar(); renderUI(); }
+function bulkBar(){
+  const b=document.getElementById('bulk-bar');
+  if(sel.size>0){ b.classList.remove('hidden'); document.getElementById('bulk-ct').textContent=`${sel.size} records selected`; b.style.display="flex"; }
+  else { b.classList.add('hidden'); b.style.display="none"; }
+}
+
+function setNav(el,st){
+  document.querySelectorAll('.snav').forEach(x=>x.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('fst').value=st;
+  renderUI();
+}
+
+// Modal Handlers
+function qDel(id){ pending=[id]; showModal('del-modal', id); }
+function qRet(id){ pending=[id]; showModal('ret-modal', id); }
+function openDelModal(){ if(!sel.size)return; pending=[...sel]; showModal('del-modal'); }
+function openRetModal(){ if(!sel.size)return; pending=[...sel]; showModal('ret-modal'); }
+
+function showModal(modalId, singleId = null) {
+  const listId = modalId === 'del-modal' ? 'del-list' : 'ret-list';
+  const targetIds = singleId ? [singleId] : [...sel];
+  document.getElementById(listId).innerHTML = targetIds.map(id => {
+    const p = products.find(x => x.id === id);
+    return `<li>${p.name} (${p.sku})</li>`;
+  }).join('');
+  document.getElementById(modalId).style.display = 'block';
+}
+
+function closeModals(){ 
+  document.getElementById('del-modal').style.display='none'; 
+  document.getElementById('ret-modal').style.display='none'; 
+  pending=[]; 
+}
+
+// CRUD UPDATE Operations (Sending data to simulated backend)
+async function confirmDel(){ await updateDbStatus(pending, 'removed'); }
+async function confirmRet(){ await updateDbStatus(pending, 'returned'); }
+
+async function updateDbStatus(ids, newStatus) {
+  // Update local state optimistically
+  products.forEach(p => { if (ids.includes(p.id)) p.status = newStatus; });
+  
+  // Send async request to API
+  const response = await MockDatabaseAPI.updateStatus(ids, newStatus);
+  
+  if(response.success) {
+    toast(`Database updated: ${response.affectedRows} row(s) set to ${newStatus}.`, newStatus === 'removed' ? '#ef4444' : '#3b82f6');
+  }
+  
+  sel.clear(); 
+  document.getElementById('chk-all').checked=false; 
+  bulkBar(); 
+  closeModals(); 
+  renderUI(); 
+}
+
+// CRUD DELETE Operation (Resetting database)
+async function factoryResetDB() {
+  if(confirm("⚠️ DANGER: This will TRUNCATE the database and reset all inventory tracking. Proceed?")) {
+    await MockDatabaseAPI.resetDatabase();
+    products = []; 
+    renderUI();
+    toast('Database truncated successfully.', '#ef4444');
+    setTimeout(() => initializeData(), 2000);
+  }
+}
+
+// UI Utilities
+function toast(msg, color){
+  const w=document.getElementById('toasts');
+  const el=document.createElement('div');
+  el.style.cssText = `background:${color}; color:white; padding:10px 20px; border-radius:4px; margin-top:10px; font-weight:bold; font-family:sans-serif;`;
+  el.textContent=msg; 
+  w.appendChild(el);
+  setTimeout(()=>el.remove(), 3500);
+}
+
+function exportCSV(){
+  if(!products.length) return toast('No records to export.', '#666');
+  const rows=[['ID', 'SKU', 'Name', 'Category', 'Price', 'Stock', 'DB_Status']];
+  products.forEach(p=>rows.push([p.id, p.sku, `"${p.name}"`, p.cat, p.price, p.stock, p.status]));
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(rows.map(r=>r.join(',')).join('\n'));
+  a.download='ww-database-export.csv'; a.click();
+  toast('SQL Database exported to CSV.', '#10b981');
+}
+
+setInterval(()=>{ document.getElementById('clock').textContent='Server Time: '+new Date().toLocaleTimeString('en-GB'); },1000);
+
+initializeData();
+</script>
+</body>
+</html>

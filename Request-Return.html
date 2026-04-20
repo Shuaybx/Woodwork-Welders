@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Request a Return — Woodwork Welders</title>
+  <link rel="stylesheet" href="Woodwork.css">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+  <link rel="icon" href="download.ico">
+</head>
+<body style="background: #f4f1ea; font-family: 'Source Sans 3', sans-serif;">
+
+<header class="site-header">
+  <nav class="nav-wrap">
+    <a href="Welcome Area.html" class="logo-link">
+      <img src="Logo Image.jpeg" alt="Woodwork Welders Logo" style="height:70px; width:auto; display:block;" />
+    </a>
+
+    <ul class="nav-links">
+      <li><a href="Make Your Own Wears.html">Bespoke</a></li>
+      <li><a href="Traditional Product Promotion.html">Promotions</a></li>
+      <li><a href="Request-Return.html" class="active">Returns</a></li>
+    </ul>
+  
+    <div class="nav-right">
+      <a href="Contact Us.html" class="btn-cta">Contact Us</a>
+    </div>
+  </nav>
+</header>
+
+<div style="max-width: 500px; margin: 80px auto; background: rgb(112, 75, 10); padding: 40px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); min-height: 50vh;">
+  <h2 style="text-align: center; color: #3a2e18;">Request a Return</h2>
+  <p style="text-align: center; color: #d3c9c9; margin-bottom: 30px;">Enter your order details below to initiate a return.</p>
+
+  <form id="return-form">
+    <div style="margin-bottom: 20px;">
+      <label style="display: block; font-weight: bold; margin-bottom: 8px;">Order Number (e.g., WW-171...)</label>
+      <input type="text" id="order_id" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;" placeholder="WW-XXXXXXXXXX">
+    </div>
+
+    <div style="margin-bottom: 20px;">
+      <label style="display: block; font-weight: bold; margin-bottom: 8px;">Reason for Return</label>
+      <select id="reason" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+        <option value="not_as_described">Item not as described</option>
+        <option value="damaged">Item arrived damaged</option>
+        <option value="wrong_item">Received the wrong item</option>
+      </select>
+    </div>
+
+    <div style="margin-bottom: 20px;">
+      <label style="display: block; font-weight: bold; margin-bottom: 8px;">Additional Details (Optional)</label>
+      <textarea id="details" rows="4" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;" placeholder="Please provide any extra context..."></textarea>
+    </div>
+
+    <button type="submit" style="width: 100%; padding: 15px; background: #3a2e18; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 16px;">
+      Submit Return Request
+    </button>
+  </form>
+
+  <div id="return-message" style="margin-top: 20px; text-align: center; font-weight: bold;"></div>
+</div>
+
+<footer class="site-footer" style="background-color: #9f6635; color: #ffffff; padding: 20px 0; text-align: center;">
+    <p style="color: #ffffff; margin: 0;">&copy; 2026 Woodwork Welders. All rights reserved.</p>
+  </div>
+</footer>
+
+<script>
+document.getElementById('return-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const submitBtn = this.querySelector('button');
+    submitBtn.textContent = 'Processing...';
+    submitBtn.disabled = true;
+
+    const payload = {
+        order_id: document.getElementById('order_id').value.trim(),
+        reason: document.getElementById('reason').value,
+        details: document.getElementById('details').value.trim()
+    };
+
+    try {
+        const response = await fetch('submit_return.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+        const msgBox = document.getElementById('return-message');
+
+        if (data.success) {
+            msgBox.style.color = 'green';
+            msgBox.innerHTML = `Success! Your return reference is: <strong>${data.ref_code}</strong>`;
+            document.getElementById('return-form').reset();
+        } else {
+            msgBox.style.color = 'red';
+            msgBox.textContent = data.message;
+        }
+    } catch (err) {
+        document.getElementById('return-message').style.color = 'red';
+        document.getElementById('return-message').textContent = 'A network error occurred.';
+    } finally {
+        submitBtn.textContent = 'Submit Return Request';
+        submitBtn.disabled = false;
+    }
+});
+</script>
+
+</body>
+</html>
